@@ -1,7 +1,6 @@
-import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import { getAdminPath } from "@/lib/adminConfig";
-
+import { verifyAdminToken } from "@/lib/jwtEdge";
 function getSecret() {
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) return null;
@@ -38,8 +37,7 @@ async function protectAdminRoute(request, pathname, adminPath) {
   if (!token) return loginRedirect(request, adminPath);
 
   try {
-    await jwtVerify(token, secret);
-
+    await verifyAdminToken(token, secret);
     if (adminPath !== "admin" && pathname.startsWith(`/${adminPath}`)) {
       const url = request.nextUrl.clone();
       url.pathname = pathname.replace(`/${adminPath}`, "/admin");
