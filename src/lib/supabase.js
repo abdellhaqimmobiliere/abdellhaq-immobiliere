@@ -13,3 +13,8 @@ export function getSupabaseAdmin() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
+
+/** Alias for routes that expect supabaseAdmin */
+export function supabaseAdmin() {
+  return getSupabaseAdmin();
+}

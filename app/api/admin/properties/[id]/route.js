@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { mapPropertyFromDb, mapPropertyToDb } from "@/lib/siteData";
+import { logAudit, getClientIp } from "@/lib/audit";
 
 export async function PATCH(req, { params }) {
   const { error } = await requireAdmin();
@@ -47,6 +48,10 @@ export async function DELETE(req, { params }) {
   if (dbError) {
     return NextResponse.json({ error: dbError.message }, { status: 500 });
   }
+
+  await logAudit("property_deleted", getClientIp(req), req.headers.get("user-agent") || "unknown", {
+    id,
+  });
 
   return NextResponse.json({ ok: true });
 }

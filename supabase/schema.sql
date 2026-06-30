@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS properties (
   badge        TEXT DEFAULT '',
   featured     BOOLEAN DEFAULT false,
   image        TEXT NOT NULL,
+  images       TEXT[] DEFAULT '{}',
   desc_fr      TEXT DEFAULT '',
   desc_ar      TEXT DEFAULT '',
   created_at   TIMESTAMPTZ DEFAULT NOW(),
@@ -60,3 +61,19 @@ DROP POLICY IF EXISTS "Public read settings" ON settings;
 
 CREATE POLICY "Public read properties" ON properties FOR SELECT USING (true);
 CREATE POLICY "Public read settings"   ON settings   FOR SELECT USING (true);
+
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id          BIGSERIAL PRIMARY KEY,
+  event       TEXT NOT NULL,
+  ip          TEXT,
+  user_agent  TEXT,
+  details     JSONB DEFAULT '{}',
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  ip           TEXT PRIMARY KEY,
+  attempts     INT DEFAULT 0,
+  locked_until TIMESTAMPTZ,
+  updated_at   TIMESTAMPTZ DEFAULT NOW()
+);

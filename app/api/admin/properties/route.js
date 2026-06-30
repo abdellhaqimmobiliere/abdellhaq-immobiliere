@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { mapPropertyFromDb, mapPropertyToDb } from "@/lib/siteData";
+import { logAudit, getClientIp } from "@/lib/audit";
 
 export async function GET() {
   const { error } = await requireAdmin();
@@ -43,6 +44,11 @@ export async function POST(req) {
   if (dbError) {
     return NextResponse.json({ error: dbError.message }, { status: 500 });
   }
+
+  await logAudit("property_added", getClientIp(req), req.headers.get("user-agent") || "unknown", {
+    id: data.id,
+    title: data.title_fr,
+  });
 
   return NextResponse.json({ property: mapPropertyFromDb(data) });
 }

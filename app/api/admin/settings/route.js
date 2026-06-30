@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { logAudit, getClientIp } from "@/lib/audit";
 
 export async function GET() {
   const { error } = await requireAdmin();
@@ -46,6 +47,10 @@ export async function PATCH(req) {
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
   }
+
+  await logAudit("settings_changed", getClientIp(req), req.headers.get("user-agent") || "unknown", {
+    keys: updates.map((u) => u.key),
+  });
 
   return NextResponse.json({ ok: true });
 }

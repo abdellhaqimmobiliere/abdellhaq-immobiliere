@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useToast } from "@/components/admin/Toast";
+import { adminFetch } from "@/lib/adminFetch";
+import ImageUploader from "@/components/admin/ImageUploader";
 
 const CITIES = ["Rabat", "Casablanca", "Marrakech", "Fès", "Agadir", "Tanger"];
 const EMPTY_FORM = {
@@ -17,6 +19,7 @@ const EMPTY_FORM = {
   bathrooms: 0,
   badge: "",
   featured: false,
+  images: [],
   image: "",
   descFr: "",
   descAr: "",
@@ -58,7 +61,14 @@ function PropertyModal({ open, mode, initial, onClose, onSaved }) {
 
   useEffect(() => {
     if (open) {
-      setForm(initial ? { ...EMPTY_FORM, ...initial } : { ...EMPTY_FORM });
+      const base = initial ? { ...EMPTY_FORM, ...initial } : { ...EMPTY_FORM };
+      const imgs =
+        initial?.images?.length > 0
+          ? initial.images
+          : initial?.image
+            ? [initial.image]
+            : [];
+      setForm({ ...base, images: imgs, image: imgs[0] || "" });
       setErrors({});
       setImgError(false);
     }
@@ -74,8 +84,7 @@ function PropertyModal({ open, mode, initial, onClose, onSaved }) {
     if (!form.titleFr.trim()) e.titleFr = "Requis";
     if (!form.price.trim()) e.price = "Requis";
     if (!form.city.trim()) e.city = "Requis";
-    if (!form.image.trim()) e.image = "Requis";
-    else if (!form.image.startsWith("https://")) e.image = "URL https:// requise";
+    if (!form.images?.length) e.images = "Ajoutez au moins une photo";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -90,10 +99,16 @@ function PropertyModal({ open, mode, initial, onClose, onSaved }) {
         : "/api/admin/properties";
     const method = mode === "edit" ? "PATCH" : "POST";
 
-    const res = await fetch(url, {
+    const payload = {
+      ...form,
+      images: form.images || [],
+      image: form.images?.[0] || "",
+    };
+
+    const res = await adminFetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -124,41 +139,20 @@ function PropertyModal({ open, mode, initial, onClose, onSaved }) {
         </div>
 
         <div className="p-6 space-y-4">
-          <div>
-            <label className="font-body text-[13px] font-medium text-[#374151] block mb-1.5">
-              Image URL
+          <div className="col-span-2">
+            <label className="font-body text-[13px] font-medium text-[#374151] block mb-2">
+              Photos de la propriété
             </label>
-            <div className="flex gap-3 items-start">
-              <input
-                value={form.image}
-                onChange={(e) => {
-                  setForm({ ...form, image: e.target.value });
-                  setImgError(false);
-                }}
-                className={inputClass}
-                placeholder="https://images.unsplash.com/..."
-              />
-              <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
-                {form.image && !imgError ? (
-                  <Image
-                    src={form.image}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <span className="text-2xl opacity-40">🖼</span>
-                )}
-              </div>
-            </div>
-            {errors.image && (
-              <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+            <ImageUploader
+              images={form.images || []}
+              onChange={(imgs) =>
+                setForm({ ...form, images: imgs, image: imgs[0] || "" })
+              }
+              propertyId={mode === "edit" ? initial?.id : undefined}
+            />
+            {errors.images && (
+              <p className="text-red-500 text-xs mt-1">{errors.images}</p>
             )}
-            <p className="text-xs text-[#9E9E9E] mt-1">
-              Conseil : utilisez une photo Unsplash (images.unsplash.com)
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -393,7 +387,7 @@ export default function AdminPropertiesPage() {
 
   function load() {
     setLoading(true);
-    fetch("/api/admin/properties")
+    adminFetch("/api/admin/properties")
       .then((r) => r.json())
       .then((d) => setProperties(d.properties || []))
       .finally(() => setLoading(false));
@@ -404,7 +398,7 @@ export default function AdminPropertiesPage() {
   }, []);
 
   async function toggleFeatured(property) {
-    const res = await fetch(`/api/admin/properties/${property.id}`, {
+    const res = await adminFetch(`/api/admin/properties/${property.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...property, featured: !property.featured }),
@@ -419,7 +413,7 @@ export default function AdminPropertiesPage() {
   }
 
   async function confirmDelete() {
-    const res = await fetch(`/api/admin/properties/${deleteTarget.id}`, {
+    const res = await adminFetch(`/api/admin/properties/${deleteTarget.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

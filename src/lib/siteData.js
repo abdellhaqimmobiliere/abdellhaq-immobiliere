@@ -147,6 +147,12 @@ export const STATIC_SITE = {
 
 export function mapPropertyFromDb(row) {
   if (!row) return null;
+  const images =
+    row.images?.length > 0
+      ? row.images
+      : row.image
+        ? [row.image]
+        : [];
   return {
     id: row.id,
     titleFr: row.title_fr,
@@ -160,7 +166,8 @@ export function mapPropertyFromDb(row) {
     bathrooms: row.bathrooms ?? 0,
     badge: row.badge || "",
     featured: row.featured ?? false,
-    image: row.image,
+    images,
+    image: images[0] || row.image || "",
     descFr: row.desc_fr || "",
     descAr: row.desc_ar || "",
     createdAt: row.created_at,
@@ -169,6 +176,14 @@ export function mapPropertyFromDb(row) {
 }
 
 export function mapPropertyToDb(data) {
+  const images =
+    data.images?.length > 0
+      ? data.images
+      : data.image
+        ? [data.image]
+        : [];
+  const cover = images[0] || data.image || "";
+
   return {
     title_fr: data.title_fr ?? data.titleFr,
     title_ar: data.title_ar ?? data.titleAr ?? "",
@@ -181,7 +196,8 @@ export function mapPropertyToDb(data) {
     bathrooms: data.bathrooms ?? 0,
     badge: data.badge || "",
     featured: data.featured ?? false,
-    image: data.image,
+    images,
+    image: cover,
     desc_fr: data.desc_fr ?? data.descFr ?? "",
     desc_ar: data.desc_ar ?? data.descAr ?? "",
   };

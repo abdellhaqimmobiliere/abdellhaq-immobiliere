@@ -19,6 +19,9 @@ export default function PropertyCard({ property, onSelect }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
   const title = isRtl ? property.titleAr : property.titleFr;
+  const coverImage =
+    property.images?.[0] || property.image || "/brand/cover.png";
+  const imageCount = property.images?.length || (property.image ? 1 : 0);
   const typeLabel =
     property.type === "vente" ? tr.typeVente : tr.typeLocation;
   const typeColor =
@@ -46,7 +49,7 @@ export default function PropertyCard({ property, onSelect }) {
       <div className="relative overflow-hidden" style={{ height: 210 }}>
         {!imgLoaded && <div className="absolute inset-0 skeleton" />}
         <Image
-          src={property.image}
+          src={coverImage}
           alt={title}
           fill
           className={`object-cover transition-all duration-500 group-hover:scale-105 ${
@@ -71,6 +74,15 @@ export default function PropertyCard({ property, onSelect }) {
             </span>
           )}
         </div>
+        {imageCount > 1 && (
+          <span
+            className={`absolute bottom-3 text-[10px] font-semibold bg-black/50 text-white px-2 py-1 rounded-full backdrop-blur-sm ${
+              isRtl ? "left-3" : "right-3"
+            }`}
+          >
+            +{imageCount - 1}
+          </span>
+        )}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[#0D2340]/20 backdrop-blur-[2px]">
           <div className="bg-white text-[#0D2340] text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
             <Eye size={13} />

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/admin/Toast";
+import { adminFetch } from "@/lib/adminFetch";
+import { adminPath } from "@/lib/adminConfig";
 
 function StatCard({ label, value, icon, color }) {
   return (
@@ -26,7 +28,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/properties")
+    adminFetch("/api/admin/properties")
       .then((r) => r.json())
       .then((data) => {
         if (data.properties) setProperties(data.properties);
@@ -46,7 +48,7 @@ export default function AdminDashboard() {
   const recent = properties.slice(0, 5);
 
   async function toggleFeatured(property) {
-    const res = await fetch(`/api/admin/properties/${property.id}`, {
+    const res = await adminFetch(`/api/admin/properties/${property.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...property, featured: !property.featured }),
@@ -64,7 +66,7 @@ export default function AdminDashboard() {
 
   async function deleteProperty(property) {
     if (!confirm(`Supprimer « ${property.titleFr} » ?`)) return;
-    const res = await fetch(`/api/admin/properties/${property.id}`, {
+    const res = await adminFetch(`/api/admin/properties/${property.id}`, {
       method: "DELETE",
     });
     if (res.ok) {
@@ -90,13 +92,13 @@ export default function AdminDashboard() {
 
       <div className="flex flex-col sm:flex-row gap-4 mb-10">
         <Link
-          href="/admin/properties"
+          href={adminPath("properties")}
           className="flex-1 text-center font-body text-sm font-medium bg-[#C9A84C] text-[#0D2340] rounded-xl py-4 hover:bg-[#E8C97A] transition"
         >
           Ajouter une propriété
         </Link>
         <Link
-          href="/admin/settings"
+          href={adminPath("settings")}
           className="flex-1 text-center font-body text-sm font-medium border-2 border-[#0D2340] text-[#0D2340] rounded-xl py-4 hover:bg-[#0D2340] hover:text-white transition"
         >
           Modifier les paramètres
@@ -109,7 +111,7 @@ export default function AdminDashboard() {
             Propriétés récentes
           </h2>
           <Link
-            href="/admin/properties"
+            href={adminPath("properties")}
             className="font-body text-sm text-[#C9A84C] hover:underline"
           >
             Voir toutes →
@@ -168,7 +170,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex gap-2">
-                        <Link href="/admin/properties" className="text-[#0D2340] hover:text-[#C9A84C]">
+                        <Link href={adminPath("properties")} className="text-[#0D2340] hover:text-[#C9A84C]">
                           ✏️
                         </Link>
                         <button

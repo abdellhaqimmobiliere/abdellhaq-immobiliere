@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogoIcon, ArchWatermark } from "@/components/admin/AdminIcons";
+import { adminPath } from "@/lib/adminConfig";
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [sessionHint, setSessionHint] = useState(false);
   const [loading, setLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [locked, setLocked] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reason") === "session") setSessionHint(true);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -21,20 +28,21 @@ export default function AdminLogin() {
 
     const res = await fetch("/api/admin/login", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
     });
 
     if (res.ok) {
-      router.push("/admin/dashboard");
+      router.push(adminPath("dashboard"));
     } else {
+      const data = await res.json().catch(() => ({}));
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
-      setError("Mot de passe incorrect");
+      setError(data.error || "Mot de passe incorrect");
       setPassword("");
-      if (newAttempts >= 5) {
+      if (res.status === 429 || newAttempts >= 5) {
         setLocked(true);
-        setError("Trop de tentatives. Réessayez dans 30 secondes.");
         setTimeout(() => {
           setLocked(false);
           setAttempts(0);
@@ -59,6 +67,12 @@ export default function AdminLogin() {
           </p>
         </div>
         <div className="w-12 h-px bg-[#C9A84C] mx-auto mb-6" />
+
+        {sessionHint && (
+          <p className="font-body text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-2 mb-4 text-center">
+            Session expirée. Veuillez vous reconnecter.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

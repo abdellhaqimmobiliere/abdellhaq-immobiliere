@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/admin/Toast";
+import { adminFetch } from "@/lib/adminFetch";
 
 const inputClass =
   "border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C] outline-none transition w-full font-body";
@@ -59,7 +60,7 @@ export default function AdminSettingsPage() {
   const [savingSection, setSavingSection] = useState(null);
 
   useEffect(() => {
-    fetch("/api/admin/settings")
+    adminFetch("/api/admin/settings")
       .then((r) => r.json())
       .then((d) => {
         if (d.map) {
@@ -77,7 +78,7 @@ export default function AdminSettingsPage() {
   async function saveSection(keys, sectionName) {
     setSavingSection(sectionName);
     const updates = keys.map((key) => ({ key, value: form[key] ?? "" }));
-    const res = await fetch("/api/admin/settings", {
+    const res = await adminFetch("/api/admin/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ updates }),

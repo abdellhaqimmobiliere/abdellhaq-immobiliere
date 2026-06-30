@@ -5,11 +5,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogoIcon } from "@/components/admin/AdminIcons";
 import { ToastProvider } from "@/components/admin/Toast";
+import AdminSessionGuard from "@/components/admin/AdminSessionGuard";
+import { adminFetch } from "@/lib/adminFetch";
+import { adminPath } from "@/lib/adminConfig";
 
 const NAV = [
-  { href: "/admin/dashboard", label: "Tableau de bord", icon: "🏠" },
-  { href: "/admin/properties", label: "Propriétés", icon: "🏢" },
-  { href: "/admin/settings", label: "Paramètres", icon: "⚙️" },
+  { href: adminPath("dashboard"), label: "Tableau de bord", icon: "🏠" },
+  { href: adminPath("properties"), label: "Propriétés", icon: "🏢" },
+  { href: adminPath("settings"), label: "Paramètres", icon: "⚙️" },
+  { href: adminPath("security"), label: "Sécurité", icon: "🛡️" },
 ];
 
 function Sidebar({ open, onClose }) {
@@ -17,8 +21,8 @@ function Sidebar({ open, onClose }) {
   const router = useRouter();
 
   async function logout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login");
+    await adminFetch("/api/admin/logout", { method: "POST" });
+    router.push(adminPath("login"));
   }
 
   const content = (
@@ -93,7 +97,8 @@ export default function AdminPanelLayout({ children }) {
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[#F8F8F8]">
+      <AdminSessionGuard>
+        <div className="min-h-screen bg-[#F8F8F8]">
         <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
         <div className="md:ml-[260px]">
@@ -106,7 +111,8 @@ export default function AdminPanelLayout({ children }) {
           </header>
           <main className="p-4 md:p-8">{children}</main>
         </div>
-      </div>
+        </div>
+      </AdminSessionGuard>
     </ToastProvider>
   );
 }
